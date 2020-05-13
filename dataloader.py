@@ -1,61 +1,39 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
 import sys
 import cv2
-import numpy as np
 import glob
-
 import torch
-from torch.utils.data import Dataset, DataLoader
+import numpy as np
 import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
 
 
 def pad_resize_image(inp_img, out_img=None, target_size=None):
-    """
-    Function to pad and resize images to a given size.
-    out_img is None only during inference. During training and testing
-    out_img is NOT None.
-    :param inp_img: A H x W x C input image.
-    :param out_img: A H x W input image of mask.
-    :param target_size: The size of the final images.
-    :return: Re-sized inp_img and out_img
-    """
     h, w, c = inp_img.shape
     size = max(h, w)
 
     padding_h = (size - h) // 2
     padding_w = (size - w) // 2
 
-    if out_img is None:
-        # For inference
-        temp_x = cv2.copyMakeBorder(inp_img, top=padding_h, bottom=padding_h, left=padding_w, right=padding_w,
-                                    borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    if out_img is None: # For inference
+        temp_x = cv2.copyMakeBorder(inp_img, top=padding_h, bottom=padding_h, left=padding_w,
+                                    right=padding_w, borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
         if target_size is not None:
             temp_x = cv2.resize(temp_x, (target_size, target_size), interpolation=cv2.INTER_AREA)
         return temp_x
-    else:
-        # For training and testing
-        temp_x = cv2.copyMakeBorder(inp_img, top=padding_h, bottom=padding_h, left=padding_w, right=padding_w,
-                                    borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
-        temp_y = cv2.copyMakeBorder(out_img, top=padding_h, bottom=padding_h, left=padding_w, right=padding_w,
-                                    borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
-        # print(inp_img.shape, temp_x.shape, out_img.shape, temp_y.shape)
+    else: # For training and testing
+        temp_x = cv2.copyMakeBorder(inp_img, top=padding_h, bottom=padding_h, left=padding_w,
+                                    right=padding_w, borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+        temp_y = cv2.copyMakeBorder(out_img, top=padding_h, bottom=padding_h, left=padding_w,
+                                    right=padding_w, borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
 
         if target_size is not None:
             temp_x = cv2.resize(temp_x, (target_size, target_size), interpolation=cv2.INTER_AREA)
             temp_y = cv2.resize(temp_y, (target_size, target_size), interpolation=cv2.INTER_AREA)
         return temp_x, temp_y
+    pass
 
 
 def random_crop_flip(inp_img, out_img):
-    """
-    Function to randomly crop and flip images.
-    :param inp_img: A H x W x C input image.
-    :param out_img: A H x W input image.
-    :return: The randomly cropped and flipped image.
-    """
     h, w = out_img.shape
 
     rand_h = np.random.randint(h/8)
@@ -73,14 +51,6 @@ def random_crop_flip(inp_img, out_img):
 
 
 def random_rotate(inp_img, out_img, max_angle=25):
-    """
-    Function to randomly rotate images within +max_angle to -max_angle degrees.
-    This algorithm does NOT crops the edges upon rotation.
-    :param inp_img: A H x W x C input image.
-    :param out_img: A H x W input image.
-    :param max_angle: Maximum angle an image can be rotated in either direction.
-    :return: The randomly rotated image.
-    """
     angle = np.random.randint(-max_angle, max_angle)
     h, w = out_img.shape
     center = (w / 2, h / 2)
@@ -99,14 +69,6 @@ def random_rotate(inp_img, out_img, max_angle=25):
 
 
 def random_rotate_lossy(inp_img, out_img, max_angle=25):
-    """
-    Function to randomly rotate images within +max_angle to -max_angle degrees.
-    This algorithm crops the edges upon rotation.
-    :param inp_img: A H x W x C input image.
-    :param out_img: A H x W input image.
-    :param max_angle: Maximum angle an image can be rotated in either direction.
-    :return: The randomly rotated image.
-    """
     angle = np.random.randint(-max_angle, max_angle)
     h, w = out_img.shape
     center = (w / 2, h / 2)
@@ -115,22 +77,14 @@ def random_rotate_lossy(inp_img, out_img, max_angle=25):
 
 
 def random_brightness(inp_img):
-    """
-    Function to randomly perturb the brightness of the input images.
-    :param inp_img: A H x W x C input image.
-    :return: The image with randomly perturbed brightness.
-    """
     contrast = np.random.rand(1) + 0.5
     light = np.random.randint(-20, 20)
     inp_img = contrast * inp_img + light
-
     return np.clip(inp_img, 0, 255)
 
 
 class SODLoader(Dataset):
-    """
-    DataLoader for DUTS dataset (for training and testing).
-    """
+
     def __init__(self, mode='train', augment_data=False, target_size=256):
         if mode == 'train':
             self.inp_path = './data/DUTS/DUTS-TR/DUTS-TR-Image'
@@ -144,16 +98,11 @@ class SODLoader(Dataset):
 
         self.augment_data = augment_data
         self.target_size = target_size
-        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                              std=[0.229, 0.224, 0.225])
-
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            self.normalize,
-        ])  # Not used
-
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        self.transform = transforms.Compose([transforms.ToTensor(), self.normalize])  # Not used
         self.inp_files = sorted(glob.glob(self.inp_path + '/*'))
         self.out_files = sorted(glob.glob(self.out_path + '/*'))
+        pass
 
     def __getitem__(self, idx):
         inp_img = cv2.imread(self.inp_files[idx])
@@ -168,6 +117,7 @@ class SODLoader(Dataset):
             inp_img, mask_img = random_crop_flip(inp_img, mask_img)
             inp_img, mask_img = random_rotate(inp_img, mask_img)
             inp_img = random_brightness(inp_img)
+            pass
 
         # Pad images to target size
         inp_img, mask_img = pad_resize_image(inp_img, mask_img, self.target_size)
@@ -177,32 +127,25 @@ class SODLoader(Dataset):
         inp_img = self.normalize(inp_img)
 
         mask_img = np.expand_dims(mask_img, axis=0)
-
         return inp_img, torch.from_numpy(mask_img).float()
 
     def __len__(self):
         return len(self.inp_files)
 
+    pass
+
 
 class InfDataloader(Dataset):
-    """
-    Dataloader for Inference.
-    """
+
     def __init__(self, img_folder, target_size=256):
         self.imgs_folder = img_folder
         self.img_paths = sorted(glob.glob(self.imgs_folder + '/*'))
 
         self.target_size = target_size
-        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                              std=[0.229, 0.224, 0.225])
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        pass
 
     def __getitem__(self, idx):
-        """
-        __getitem__ for inference
-        :param idx: Index of the image
-        :return: img_np is a numpy RGB-image of shape H x W x C with pixel values in range 0-255.
-        And img_tor is a torch tensor, RGB, C x H x W in shape and normalized.
-        """
         img = cv2.imread(self.img_paths[idx])
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -218,6 +161,8 @@ class InfDataloader(Dataset):
 
     def __len__(self):
         return len(self.img_paths)
+
+    pass
 
 
 if __name__ == '__main__':

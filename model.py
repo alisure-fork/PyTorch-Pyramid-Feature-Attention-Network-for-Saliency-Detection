@@ -1,15 +1,11 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
-import numpy as np
 import cv2
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-
 from attention import SpatialAttention, ChannelwiseAttention
+
 
 vgg_conv1_2 = vgg_conv2_2 = vgg_conv3_3 = vgg_conv4_3 = vgg_conv5_3 = None
 
@@ -45,6 +41,7 @@ def conv_5_3_hook(module, input, output):
 
 
 class CPFE(nn.Module):
+
     def __init__(self, feature_layer=None, out_channels=32):
         super(CPFE, self).__init__()
 
@@ -68,6 +65,7 @@ class CPFE(nn.Module):
                                     stride=1, dilation=self.dil_rates[2], padding=self.dil_rates[2], bias=False)
 
         self.bn = nn.BatchNorm2d(out_channels*4)
+        pass
 
     def forward(self, input_):
         # Extract features
@@ -82,8 +80,11 @@ class CPFE(nn.Module):
 
         return bn_feats
 
+    pass
+
 
 class SODModel(nn.Module):
+
     def __init__(self):
         super(SODModel, self).__init__()
 
@@ -119,17 +120,13 @@ class SODModel(nn.Module):
 
         # Initialize layers for fused features (ff) processing
         self.ff_conv_1 = nn.Conv2d(128, 1, (3, 3), padding=1)
+        pass
 
     def forward(self, input_):
         global vgg_conv1_2, vgg_conv2_2, vgg_conv3_3, vgg_conv4_3, vgg_conv5_3
 
         # Pass input_ through vgg16 to generate intermediate features
         self.vgg16(input_)
-        # print(vgg_conv1_2.size())
-        # print(vgg_conv2_2.size())
-        # print(vgg_conv3_3.size())
-        # print(vgg_conv4_3.size())
-        # print(vgg_conv5_3.size())
 
         # Process high level features
         conv3_cpfe_feats = self.cpfe_conv3_3(vgg_conv3_3)
@@ -167,6 +164,8 @@ class SODModel(nn.Module):
         fused_feats = torch.sigmoid(self.ff_conv_1(fused_feats))
 
         return fused_feats, ca_act_reg
+
+    pass
 
 
 def test():

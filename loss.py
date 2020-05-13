@@ -1,13 +1,10 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class EdgeSaliencyLoss(nn.Module):
+
     def __init__(self, device, alpha_sal=0.7):
         super(EdgeSaliencyLoss, self).__init__()
 
@@ -16,11 +13,11 @@ class EdgeSaliencyLoss(nn.Module):
         self.laplacian_kernel = torch.tensor([[-1., -1., -1.], [-1., 8., -1.], [-1., -1., -1.]], dtype=torch.float, requires_grad=False)
         self.laplacian_kernel = self.laplacian_kernel.view((1, 1, 3, 3))  # Shape format of weight for convolution
         self.laplacian_kernel = self.laplacian_kernel.to(device)
+        pass
 
     @staticmethod
     def weighted_bce(input_, target, weight_0=1.0, weight_1=1.0, eps=1e-15):
-        wbce_loss = -weight_1 * target * torch.log(input_ + eps) - weight_0 * (1 - target) * torch.log(
-            1 - input_ + eps)
+        wbce_loss = -weight_1 * target * torch.log(input_ + eps) - weight_0 * (1 - target) * torch.log(1 - input_ + eps)
         return torch.mean(wbce_loss)
 
     def forward(self, y_pred, y_gt):
@@ -34,6 +31,8 @@ class EdgeSaliencyLoss(nn.Module):
 
         total_loss = self.alpha_sal * sal_loss + (1 - self.alpha_sal) * edge_loss
         return total_loss
+
+    pass
 
 
 if __name__ == '__main__':

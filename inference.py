@@ -1,17 +1,12 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
-import argparse
 import cv2
-import numpy as np
 import tqdm
 import torch
+import argparse
+import numpy as np
 import torch.nn as nn
+from model import SODModel
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-
-from model import SODModel
 from dataloader import InfDataloader, SODLoader
 
 
@@ -22,16 +17,12 @@ def parse_arguments():
     parser.add_argument('--use_gpu', default=True, help='Whether to use GPU or not', type=bool)
     parser.add_argument('--img_size', default=256, help='Image size to be used', type=int)
     parser.add_argument('--bs', default=24, help='Batch Size for testing', type=int)
-
     return parser.parse_args()
 
 
 def run_inference(args):
     # Determine device
-    if args.use_gpu and torch.cuda.is_available():
-        device = torch.device(device='cuda')
-    else:
-        device = torch.device(device='cpu')
+    device = torch.device(device='cuda') if args.use_gpu and torch.cuda.is_available() else torch.device(device='cpu')
 
     # Load model
     model = SODModel()
@@ -66,14 +57,14 @@ def run_inference(args):
             key = cv2.waitKey(0)
             if key == ord('q'):
                 break
+        pass
+
+    pass
 
 
 def calculate_mae(args):
     # Determine device
-    if args.use_gpu and torch.cuda.is_available():
-        device = torch.device(device='cuda')
-    else:
-        device = torch.device(device='cpu')
+    device = torch.device(device='cuda') if args.use_gpu and torch.cuda.is_available() else torch.device(device='cpu')
 
     # Load model
     model = SODModel()
@@ -97,6 +88,8 @@ def calculate_mae(args):
             mae_list.extend(mae)
 
     print('MAE for the test set is :', np.mean(mae_list))
+
+    pass
 
 
 if __name__ == '__main__':

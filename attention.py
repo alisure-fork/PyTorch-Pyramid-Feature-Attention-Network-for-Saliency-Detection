@@ -1,13 +1,10 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class SpatialAttention(nn.Module):
+
     def __init__(self, in_channels, kernel_size=9):
         super(SpatialAttention, self).__init__()
 
@@ -24,6 +21,7 @@ class SpatialAttention(nn.Module):
         self.grp2_bn1 = nn.BatchNorm2d(self.in_channels//2)
         self.grp2_conv1k = nn.Conv2d(self.in_channels//2, 1, (1, self.kernel_size), padding=(0, pad))
         self.grp2_bn2 = nn.BatchNorm2d(1)
+        pass
 
     def forward(self, input_):
         # Generate Group 1 Features
@@ -43,15 +41,17 @@ class SpatialAttention(nn.Module):
 
         return added_feats
 
+    pass
+
 
 class ChannelwiseAttention(nn.Module):
+
     def __init__(self, in_channels):
         super(ChannelwiseAttention, self).__init__()
-
         self.in_channels = in_channels
-
         self.linear_1 = nn.Linear(self.in_channels, self.in_channels//4)
         self.linear_2 = nn.Linear(self.in_channels//4, self.in_channels)
+        pass
 
     def forward(self, input_):
         n_b, n_c, h, w = input_.size()
@@ -67,6 +67,8 @@ class ChannelwiseAttention(nn.Module):
         feats = feats.expand_as(input_).clone()
 
         return feats, ca_act_reg
+
+    pass
 
 
 if __name__ == '__main__':
